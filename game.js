@@ -159,10 +159,11 @@ function drawSpinner(canvas, images)
     ctx.fillText(""+spincounter, -(""+spincounter).length*30/2, 30/2);
     rotateDeg += speed;
     if(speed > 0) { speed=Math.max(0, speed-0.03);
-      if(rotateDeg > 360) { rotateDeg-=360; spincounter++; } }
+      if(rotateDeg > 360) { rotateDeg-=360; spincounter++; vib(); } }
     if(speed < 0) { speed=Math.min(0, speed+0.03)
-      if(rotateDeg < -360) { rotateDeg+=360; spincounter++; } }
+      if(rotateDeg < -360) { rotateDeg+=360; spincounter++; vib(); } }
     rotAngle = rotateDeg*Math.PI/180;
+    function vib() { if("vibrate" in navigator) navigator.vibrate(6); }
     if(cur_sound === 0 && spincounter > 250)
       {
       source.loop = false;
