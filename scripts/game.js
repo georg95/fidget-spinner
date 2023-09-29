@@ -1,5 +1,12 @@
 
 var use_vibro = true;
+(function()
+{
+var cur_spinners = JSON.parse(localStorage.getItem('spinners') || '{}');
+if(!cur_spinners[0])
+localStorage.setItem('spinners', JSON.stringify({0:true})); // 0th spinner by default
+})();
+
 
 (function() {
   var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
@@ -34,15 +41,23 @@ var spincounter = 0;
 var spinnerStats =
   [
     {
-    slow_coeff1: 0.98,
+    slow_coeff1: 0.99,
     slow_coeff2: 0.05,
+    parts: 2,
     },
     {
-    slow_coeff1: 0.99,
+    slow_coeff1: 0.995,
     slow_coeff2: 0.03,
+    parts: 3,
+    },
+    {
+    slow_coeff1: 0.998,
+    slow_coeff2: 0.02,
+    parts: 3,
     }
   ];
-var cur_spinner = spinnerStats[0];
+var spinner_use = parseInt(localStorage.getItem('use_spinner') || '0');
+var cur_spinner = spinnerStats[spinner_use];
 
 function buySpinner(i, price)
   {
@@ -55,9 +70,11 @@ function buySpinner(i, price)
   localStorage.setItem('spinners', JSON.stringify(cur_spinners));
   changeSpinner(i);
   }
-function changeSpinner(i)
+function changeSpinner(i, callback)
   {
+  spinner_use = i;
   cur_spinner = spinnerStats[i];
+  localStorage.setItem('use_spinner', ''+i);
   console.assert(i >= 0 && i < spinnerStats.length)
   loadPics('pics/',
     ['spinner.'+i+'.png',
@@ -65,6 +82,7 @@ function changeSpinner(i)
     {
     imagebase['spinner'] = newSkin['spinner'];
     imagebase['button'] = newSkin['button'];
+    if(callback) { callback(); }
     });
   }
 var imagebase = {};
@@ -87,10 +105,11 @@ function drawSpinner(canvas, images)
     { return Math.sqrt((x-x2)*(x-x2)+(y-y2)*(y-y2)); }
   function onDrag(x,y)
     {
-    for(var i = 0; i < 3; i++)
+    var angle = Math.PI*2/cur_spinner.parts;
+    for(var i = 0; i < cur_spinner.parts; i++)
       {
-      var cx = W/2+R*Math.cos(rotAngle-Math.PI/2+i*Math.PI*2/3);
-      var cy = H/2+R*Math.sin(rotAngle-Math.PI/2+i*Math.PI*2/3);
+      var cx = W/2+R*Math.cos(rotAngle-Math.PI/2+i*angle);
+      var cy = H/2+R*Math.sin(rotAngle-Math.PI/2+i*angle);
       if(dst(x,y,cx,cy) < R/2) { return true; }
       }
     return false;
@@ -253,8 +272,8 @@ function loadGame()
   var canvas = createCanvas();
   document.body.appendChild(canvas);
   loadPics('pics/',
-    ['spinner.0.png',
-     'button.0.png',
+    ['spinner.'+spinner_use+'.png',
+     'button.'+spinner_use+'.png',
      'speaker_on.png',
      'speaker_off.png',
      'vibro_on.png',
