@@ -1,7 +1,10 @@
 console.log('hello world');
-var sound0 = null;
+var use_sound = true;
+var use_vibro = true;
+
 var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 console.log('audio:', audioCtx);
+var gainNode = audioCtx.createGain();
 
 (function() {
   var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
@@ -70,12 +73,28 @@ function drawSpinner(canvas, images)
       }
     return false;
     }
+  function checkVibro(x,y)
+    {
+    if (x > W*6/7 && x < W && y > 0 && y < H/7)
+      { use_vibro = !use_vibro; }
+    }
+  function checkAudio(x,y)
+    {
+    if (x > 0 && x < W/7 && y > 0 && y < H/7)
+      {
+      use_sound = !use_sound
+      if(use_sound) { gainNode.gain.value = 1; }
+      else          { gainNode.gain.value = 0; }
+      }
+    }
   function takeSpinner(e)
     {
     e.preventDefault();
     //console.log(e);
     var ex = eventX(e);
     var ey = eventY(e)
+    checkAudio(ex, ey);
+    checkVibro(ex, ey);
     if(onDrag(ex, ey))
       {
       moving = true;
@@ -146,6 +165,10 @@ function drawSpinner(canvas, images)
     {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, W, H);
+    var speaker_img = use_sound ? 'speaker_on' : 'speaker_off';
+    ctx.drawImage(images[speaker_img], 0, 0, 256, 256, 0, 0, W/7, H/7);
+    var vibro_img = use_vibro ? 'vibro_on' : 'vibro_off';
+    ctx.drawImage(images[vibro_img], 0, 0, 256, 256, W*6/7, 0, W/7, H/7);
     ctx.translate(W/2, H/2);
     ctx.drawImage(images['button'], 0, 0, 530, 530, -W/2, -H/2, W, H);
     ctx.rotate(rotAngle);
@@ -163,15 +186,15 @@ function drawSpinner(canvas, images)
     if(speed < 0) { speed=Math.min(0, speed+0.03)
       if(rotateDeg < -360) { rotateDeg+=360; spincounter++; vib(); } }
     rotAngle = rotateDeg*Math.PI/180;
-    function vib() { if("vibrate" in navigator) navigator.vibrate(6); }
-    if(cur_sound === 0 && spincounter > 250)
-      {
-      source.loop = false;
-      source.onended = function()
-          {
-          playSound(sounds[++cur_sound]);
-          }
-      }
+    function vib() { if(use_vibro && "vibrate" in navigator) navigator.vibrate(6); }
+    // if(cur_sound === 0 && spincounter > 250)
+    //   {
+    //   source.loop = false;
+    //   source.onended = function()
+    //       {
+    //       playSound(sounds[++cur_sound]);
+    //       }
+    //   }
     // TODO sound switch
     requestAnimationFrame(redraw);
     }
@@ -190,11 +213,35 @@ function loadPic()
     spinnerButton.src = 'button.png';
     spinnerButton.onload = function()
       {
-      drawSpinner(canvas,
+      var soundOn = new Image();
+      soundOn.src = 'speaker_on.png';
+      soundOn.onload = function()
+        {
+        var soundOff = new Image();
+        soundOff.src = 'speaker_off.png';
+        soundOff.onload = function()
           {
-          'spinner': spinnerImg,
-          'button': spinnerButton
-          });
+          var vibroOn = new Image();
+          vibroOn.src = 'vibro_on.png';
+          vibroOn.onload = function()
+            {
+            var vibroOff = new Image();
+            vibroOff.src = 'vibro_off.png';
+            vibroOff.onload = function()
+              {
+              drawSpinner(canvas,
+                  {
+                  'spinner': spinnerImg,
+                  'button': spinnerButton,
+                  'speaker_on': soundOn,
+                  'speaker_off': soundOff,
+                  'vibro_on': vibroOn,
+                  'vibro_off': vibroOff
+                  });
+              }
+            }
+          }
+        }
       }
     }
   loadSounds();
@@ -208,7 +255,8 @@ function playSound(buffer)
   console.log('play sound');
   source = audioCtx.createBufferSource();
   source.buffer = buffer;
-  source.connect(audioCtx.destination);
+  source.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
   source.start(0);
   source.loop = true;
   }
@@ -238,7 +286,7 @@ function loadSounds()
     loadSound('YouSpinMeRound1.ogg', function(sound1)
       {
       sounds = [sound0, sound1];
-      playSound(sound0);
+      playSound(sound1);
       });
     });
   }
