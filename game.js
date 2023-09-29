@@ -37,18 +37,89 @@ function drawSpinner(canvas, images)
   var ctx = canvas.getContext('2d');
   var W = canvas.width;
   var H = canvas.height;
-  var rotateDeg = 0;
+  var R = 130/530*W;
+  var rotateDeg = 0, rotAngle = 0;
+  var movespeeds = [];
+  var moving = false;
+  var speed = 20;
+  var dragDeg = 0, dragAngle = 0;
+  var prevTime = 0;
+  function dst(x,y,x2,y2)
+    { return Math.sqrt((x-x2)*(x-x2)+(y-y2)*(y-y2)); }
+  function cos2(x,y,x2,y2)
+    { return (x*x2+y*y2)/dst(0,0,x,y)/dst(0,0,x2,y2); }
+  function spd(x,y,x2,y2)
+    {
+    var a = Math.atan2(y2-y, x2-x);
+    var b = Math.atan2(y-H/2, x-H/2)+Math.PI/2;
+    console.log('angle1:', a/Math.PI*180);
+    console.log('angle2:', b/Math.PI*180);
+    return dst(x,y,x2,y2)*Math.cos(b-a);
+    }
+  function onDrag(x,y)
+    {
+    console.log('drag at', x, y);
+    for(var i = 0; i < 3; i++)
+      {
+      var cx = W/2+R*Math.cos(rotAngle-Math.PI/2+i*Math.PI*2/3);
+      var cy = H/2+R*Math.sin(rotAngle-Math.PI/2+i*Math.PI*2/3);
+      if(dst(x,y,cx,cy) < R/2) { console.log('drag successful'); return true; }
+      }
+    return false;
+    }
+  canvas.onmousedown = function(e)
+    {
+    if(onDrag(e.offsetX, e.offsetY))
+      {
+      moving = true;
+      speed = 0;
+      movespeeds = [];
+      dragDeg = rotateDeg;
+      dragAngle = Math.atan2(e.offsetY-H/2,e.offsetX-W/2);
+      prevTime = Date.now();
+      }
+    }
+  function leaveFingers(e)
+      {
+      if(!moving) { return; }
+      moving = false;
+      if(movespeeds.length !== 0)
+         { speed = movespeeds.reduce(function(a,b)
+            { return Math.abs(a)>Math.abs(b)?a:b; }, 0); }
+      console.log('speeds:', movespeeds);
+      console.log('speed:', speed);
+      }
+  canvas.onmouseup = leaveFingers;
+  canvas.onmouseout = leaveFingers;
+
+  canvas.onmousemove = function(e)
+    {
+    //console.log(e.which);
+    if(!moving) { return false; }
+    var mx = e.offsetX;
+    var my = e.offsetY;
+    var newAngle = Math.atan2(my-H/2,mx-W/2);
+    var degDiff = (newAngle-dragAngle)/Math.PI*180;
+    var timediff = Date.now()-prevTime;
+    prevTime = Date.now();
+    movespeeds.push(degDiff/timediff);
+    if(movespeeds.length > 4)
+      {movespeeds.shift();}
+    rotateDeg = dragDeg+degDiff;
+    }
   function redraw()
     {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, W, H);
-
     ctx.translate(W/2, H/2);
     ctx.drawImage(images['button'], 0, 0, 530, 530, -W/2, -H/2, W, H);
-    ctx.rotate(rotateDeg*Math.PI/180);
+    ctx.rotate(rotAngle);
     ctx.drawImage(images['spinner'], 0, 0, 530, 530, -W/2, -H/2, W, H);
-
-    rotateDeg += 9;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    rotateDeg += speed;
+    if(speed > 0) { speed=Math.max(0, speed-0.03); }
+    if(speed < 0) { speed=Math.min(0, speed+0.03); }
+    rotAngle = rotateDeg*Math.PI/180;
     requestAnimationFrame(redraw);
     }
   requestAnimationFrame(redraw);
