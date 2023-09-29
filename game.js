@@ -42,8 +42,11 @@ function drawSpinner(canvas, images)
   var movespeeds = [];
   var moving = false;
   var speed = 20;
-  var dragDeg = 0, dragAngle = 0;
+  var dragDeg = 0, dragAngle = 0, prevAngle = 0;
   var prevTime = 0;
+  var spincounter = 0;
+
+  ctx.font = "30pt Arial";
   function dst(x,y,x2,y2)
     { return Math.sqrt((x-x2)*(x-x2)+(y-y2)*(y-y2)); }
   function cos2(x,y,x2,y2)
@@ -67,46 +70,78 @@ function drawSpinner(canvas, images)
       }
     return false;
     }
-  canvas.onmousedown = function(e)
+  function takeSpinner(e)
     {
-    if(onDrag(e.offsetX, e.offsetY))
+    e.preventDefault();
+    //console.log(e);
+    var ex = eventX(e);
+    var ey = eventY(e)
+    if(onDrag(ex, ey))
       {
       moving = true;
       speed = 0;
       movespeeds = [];
       dragDeg = rotateDeg;
-      dragAngle = Math.atan2(e.offsetY-H/2,e.offsetX-W/2);
+      dragAngle = Math.atan2(ey-H/2,ex-W/2);
+      prevAngle = dragAngle;
       prevTime = Date.now();
       }
     }
-  function leaveFingers(e)
-      {
-      if(!moving) { return; }
-      moving = false;
-      if(movespeeds.length !== 0)
-         { speed = movespeeds.reduce(function(a,b)
-            { return Math.abs(a)>Math.abs(b)?a:b; }, 0); }
-      console.log('speeds:', movespeeds);
-      console.log('speed:', speed);
-      }
-  canvas.onmouseup = leaveFingers;
-  canvas.onmouseout = leaveFingers;
 
-  canvas.onmousemove = function(e)
+  function leaveFingers(e)
     {
+    if(!moving) { return; }
+    moving = false;
+    if(movespeeds.length !== 0)
+       { speed = movespeeds.reduce(function(a,b)
+          { return Math.abs(a)>Math.abs(b)?a:b; }, 0); }
+    console.log('speeds:', movespeeds);
+    console.log('speed:', speed);
+    }
+  function flipSpinner(e)
+    {
+    e.preventDefault();
     //console.log(e.which);
     if(!moving) { return false; }
-    var mx = e.offsetX;
-    var my = e.offsetY;
-    var newAngle = Math.atan2(my-H/2,mx-W/2);
+    var newAngle = Math.atan2(eventY(e)-H/2,eventX(e)-W/2);
     var degDiff = (newAngle-dragAngle)/Math.PI*180;
     var timediff = Date.now()-prevTime;
     prevTime = Date.now();
-    movespeeds.push(degDiff/timediff);
-    if(movespeeds.length > 4)
+    movespeeds.push((newAngle-prevAngle)/Math.PI*180/timediff*20);
+    prevAngle = newAngle;
+    if(movespeeds.length > 3)
       {movespeeds.shift();}
     rotateDeg = dragDeg+degDiff;
     }
+
+  canvas.onmousedown = takeSpinner;
+  canvas.onmousemove = flipSpinner;
+  canvas.onmouseup = leaveFingers;
+  canvas.onmouseout = leaveFingers;
+  canvas.addEventListener("touchstart", takeSpinner, false);
+  canvas.addEventListener("touchend", leaveFingers, false);
+  canvas.addEventListener("touchcancel", leaveFingers, false);
+  canvas.addEventListener("touchmove", flipSpinner, false);
+
+  function eventX(e)
+    {
+    e = e || window.event;
+    var x = e.clientX;
+    if(e.touches && e.touches[0])
+      { x = e.touches[0].pageX; }
+    return x;
+    }
+  function eventY(e)
+    {
+    e = e || window.event;
+    var y = e.clientY;
+    if(e.touches && e.touches[0])
+      { y = e.touches[0].pageY; }
+    return y;
+    }
+
+
+  var scale = 1;
   function redraw()
     {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -116,10 +151,21 @@ function drawSpinner(canvas, images)
     ctx.rotate(rotAngle);
     ctx.drawImage(images['spinner'], 0, 0, 530, 530, -W/2, -H/2, W, H);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // ctx.fillStyle='#0F0';
+    // ctx.fillRect(0,0,spincounter,10);
+    ctx.fillStyle='#999';
+    ctx.strokeStyle = "#999";
+    ctx.translate(W/2, 15);
+    ctx.fillText(""+spincounter, -(""+spincounter).length*30/2, 30/2);
     rotateDeg += speed;
-    if(speed > 0) { speed=Math.max(0, speed-0.03); }
-    if(speed < 0) { speed=Math.min(0, speed+0.03); }
+    if(speed > 0) { speed=Math.max(0, speed-0.03);
+      if(rotateDeg > 360) { rotateDeg-=360; spincounter++; } }
+    if(speed < 0) { speed=Math.min(0, speed+0.03)
+      if(rotateDeg < -360) { rotateDeg+=360; spincounter++; } }
     rotAngle = rotateDeg*Math.PI/180;
+    // if(source && source.loop && spincounter > 50)
+    //   { source.loop = false; }
+    // TODO sound switch
     requestAnimationFrame(redraw);
     }
   requestAnimationFrame(redraw);
@@ -147,11 +193,11 @@ function loadPic()
   loadSounds();
   }
 document.addEventListener('DOMContentLoaded', loadPic);
-
+var source;
 function playSound(buffer)
   {
   console.log('play sound');
-  var source = audioCtx.createBufferSource();
+  source = audioCtx.createBufferSource();
   source.buffer = buffer;
   source.connect(audioCtx.destination);
   source.start(0);
