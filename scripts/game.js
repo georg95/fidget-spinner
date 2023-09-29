@@ -212,7 +212,7 @@ function drawSpinner(canvas, images)
     }
   var show_crit = false;
   var anim_step = 0;
-  var anim_frames = 10;
+  var anim_frames = 20;
   function critAnimation()
     {
     show_crit = true;
