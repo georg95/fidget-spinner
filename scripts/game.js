@@ -119,6 +119,16 @@ function drawSpinner(canvas, images)
   canvas.addEventListener("touchend", leaveFingers, false);
   canvas.addEventListener("touchcancel", leaveFingers, false);
   canvas.addEventListener("touchmove", flipSpinner, false);
+  window.addEventListener('unload', saveProgress, false);
+  loadProgress();
+  function loadProgress()
+    {
+    spincounter = parseInt(localStorage.getItem('spincounter', '0')) || 0;
+    }
+  function saveProgress()
+    {
+    localStorage.setItem('spincounter', ''+spincounter);
+    }
 
   function eventX(e)
     {
