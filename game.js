@@ -163,8 +163,14 @@ function drawSpinner(canvas, images)
     if(speed < 0) { speed=Math.min(0, speed+0.03)
       if(rotateDeg < -360) { rotateDeg+=360; spincounter++; } }
     rotAngle = rotateDeg*Math.PI/180;
-    // if(source && source.loop && spincounter > 50)
-    //   { source.loop = false; }
+    if(cur_sound === 0 && spincounter > 250)
+      {
+      source.loop = false;
+      source.onended = function()
+          {
+          playSound(sounds[++cur_sound]);
+          }
+      }
     // TODO sound switch
     requestAnimationFrame(redraw);
     }
@@ -194,6 +200,8 @@ function loadPic()
   }
 document.addEventListener('DOMContentLoaded', loadPic);
 var source;
+var sounds = [];
+var cur_sound = 0;
 function playSound(buffer)
   {
   console.log('play sound');
@@ -204,21 +212,32 @@ function playSound(buffer)
   source.loop = true;
   }
 
-function loadSounds() {
-  console.log('loading sounds...');
+function loadSound(name, callback)
+  {
   function onError(err)
     {
     console.log('error ocurred:', err)
     }
-  var url = 'YouSpinMeRound0.ogg';
   var request = new XMLHttpRequest();
-  request.open('GET', url, true);
+  request.open('GET', name, true);
   request.responseType = 'arraybuffer';
   request.onload = function() {
     audioCtx.decodeAudioData(request.response, function(buffer) {
-      sound0 = buffer;
-      playSound(sound0);
-    }, onError);
-  }
+      callback(buffer);
+      }, onError);
+    }
   request.send();
-}
+  }
+
+function loadSounds()
+  {
+  console.log('loading sounds...');
+  loadSound('YouSpinMeRound0.ogg', function(sound0)
+    {
+    loadSound('YouSpinMeRound1.ogg', function(sound1)
+      {
+      sounds = [sound0, sound1];
+      playSound(sound0);
+      });
+    });
+  }
