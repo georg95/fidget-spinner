@@ -181,10 +181,10 @@ function drawSpinner(canvas, images)
     ctx.translate(W/2, 15);
     ctx.fillText(""+spincounter, -(""+spincounter).length*30/2, 30/2);
     rotateDeg += speed;
-    if(speed > 0) { speed=Math.max(0, speed-0.03);
-      if(rotateDeg > 360) { rotateDeg-=360; spincounter++; vib(); } }
-    if(speed < 0) { speed=Math.min(0, speed+0.03)
-      if(rotateDeg < -360) { rotateDeg+=360; spincounter++; vib(); } }
+    if(speed > 0) { speed=Math.max(0, speed-0.05);
+      if(rotateDeg > 360) { while(rotateDeg > 360) { rotateDeg-=360; spincounter++; } vib(); } }
+    if(speed < 0) { speed=Math.min(0, speed+0.05)
+      if(rotateDeg < -360) { while(rotateDeg < -360) { rotateDeg+=360; spincounter++; } vib(); } }
     rotAngle = rotateDeg*Math.PI/180;
     function vib() { if(use_vibro && "vibrate" in navigator) navigator.vibrate(6); }
     // if(cur_sound === 0 && spincounter > 250)
