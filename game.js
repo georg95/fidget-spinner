@@ -89,6 +89,7 @@ function drawSpinner(canvas, images)
     }
   function takeSpinner(e)
     {
+    if(!source) { playSound(sounds[0]); }
     e.preventDefault();
     //console.log(e);
     var ex = eventX(e);
@@ -167,8 +168,11 @@ function drawSpinner(canvas, images)
     ctx.clearRect(0, 0, W, H);
     var speaker_img = use_sound ? 'speaker_on' : 'speaker_off';
     ctx.drawImage(images[speaker_img], 0, 0, 256, 256, 0, 0, W/7, H/7);
-    var vibro_img = use_vibro ? 'vibro_on' : 'vibro_off';
-    ctx.drawImage(images[vibro_img], 0, 0, 256, 256, W*6/7, 0, W/7, H/7);
+    if("vibrate" in navigator)
+      {
+      var vibro_img = use_vibro ? 'vibro_on' : 'vibro_off';
+      ctx.drawImage(images[vibro_img], 0, 0, 256, 256, W*6/7, 0, W/7, H/7);
+      }
     ctx.translate(W/2, H/2);
     ctx.drawImage(images['button'], 0, 0, 530, 530, -W/2, -H/2, W, H);
     ctx.rotate(rotAngle);
@@ -229,27 +233,41 @@ function loadPic()
             vibroOff.src = 'vibro_off.png';
             vibroOff.onload = function()
               {
-              drawSpinner(canvas,
-                  {
-                  'spinner': spinnerImg,
-                  'button': spinnerButton,
-                  'speaker_on': soundOn,
-                  'speaker_off': soundOff,
-                  'vibro_on': vibroOn,
-                  'vibro_off': vibroOff
-                  });
+              loadSounds(function()
+                {
+                drawSpinner(canvas,
+                    {
+                    'spinner': spinnerImg,
+                    'button': spinnerButton,
+                    'speaker_on': soundOn,
+                    'speaker_off': soundOff,
+                    'vibro_on': vibroOn,
+                    'vibro_off': vibroOff
+                    });
+                })
               }
             }
           }
         }
       }
     }
-  loadSounds();
   }
 document.addEventListener('DOMContentLoaded', loadPic);
 var source;
 var sounds = [];
 var cur_sound = 0;
+
+window.addEventListener('touchstart', function()
+  {
+	var buffer = audioCtx.createBuffer(1, 1, 22050);
+	var source = audioCtx.createBufferSource();
+	source.buffer = buffer;
+	source.connect(myContext.destination);
+	source.noteOn(0);
+
+  playSound(sounds[0]);
+  }, false);
+
 function playSound(buffer)
   {
   console.log('play sound');
@@ -257,8 +275,8 @@ function playSound(buffer)
   source.buffer = buffer;
   source.connect(gainNode);
   gainNode.connect(audioCtx.destination);
-  source.start(0);
   source.loop = true;
+  source.start(0);
   }
 
 function loadSound(name, callback)
@@ -278,15 +296,12 @@ function loadSound(name, callback)
   request.send();
   }
 
-function loadSounds()
+function loadSounds(callback)
   {
   console.log('loading sounds...');
-  loadSound('YouSpinMeRound0.ogg', function(sound0)
+  loadSound('YouSpinMeRound1.ogg', function(sound1)
     {
-    loadSound('YouSpinMeRound1.ogg', function(sound1)
-      {
-      sounds = [sound0, sound1];
-      playSound(sound1);
-      });
+    sounds = [sound1];
+    callback();
     });
   }
