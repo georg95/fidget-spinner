@@ -23,15 +23,16 @@
         }
       .option
         {
+        display: inline-block;
         margin: 1vw;
-        width: 20vw; /* square */
-        height: 20vw;
+        width: 20vh; /* square */
+        height: 20vh;
         text-align: center;
         }
       .option img
         {
-        max-width: 15vw;
-        max-height: 15vw;
+        max-width: 15vh;
+        max-height: 15vh;
         }
       .left-down
         {
@@ -49,9 +50,11 @@
         left: 0;
         top: 0;
         }
-      .option
+      .price
         {
-
+        border: 1px solid #555;
+        border-radius: 3px;
+        padding: 3px;
         }
     </style>
     <script type="text/javascript" src="scripts/audio.js"></script>
@@ -62,8 +65,12 @@
     <a href='#menu' id='menuSwitch'><img src='pics/menu.png' class='button left-down'></a>
     <div id='menu'>
       <div class='option'>
-        <img src='pics/vk.png'>
-        поделиться результатом
+        <img src='pics/spinner1.png'><br>
+          <span class='price'>0</span>
+      </div>
+      <div class='option'>
+        <img src='pics/spinner2.png'><br>
+          <span class='price'>1000</span>
       </div>
     </div>
   </body>

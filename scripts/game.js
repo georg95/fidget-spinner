@@ -30,8 +30,47 @@ function createCanvas()
   return canvas;
   }
 
+var spincounter = 0;
+var spinnerStats =
+  [
+    {
+    slow_coeff1: 0.98,
+    slow_coeff2: 0.05,
+    },
+    {
+    slow_coeff1: 0.99,
+    slow_coeff2: 0.03,
+    }
+  ];
+var cur_spinner = spinnerStats[0];
+
+function buySpinner(i, price)
+  {
+  console.log('buy spinner');
+  var cur_spinners = JSON.parse(localStorage.getItem('spinners') || '{}');
+  console.assert(!cur_spinners[i]);
+  console.assert(price <= spincounter);
+  cur_spinners[i] = true;
+  spincounter -= price;
+  localStorage.setItem('spinners', JSON.stringify(cur_spinners));
+  changeSpinner(i);
+  }
+function changeSpinner(i)
+  {
+  cur_spinner = spinnerStats[i];
+  console.assert(i >= 0 && i < spinnerStats.length)
+  loadPics('pics/',
+    ['spinner.'+i+'.png',
+     'button.'+i+'.png'], function(newSkin)
+    {
+    imagebase['spinner'] = newSkin['spinner'];
+    imagebase['button'] = newSkin['button'];
+    });
+  }
+var imagebase = {};
 function drawSpinner(canvas, images)
   {
+  imagebase = images;
   var ctx = canvas.getContext('2d');
   var W = canvas.width;
   var H = canvas.height;
@@ -42,7 +81,6 @@ function drawSpinner(canvas, images)
   var speed = 20;
   var dragDeg = 0, dragAngle = 0, prevAngle = 0;
   var prevTime = 0;
-  var spincounter = 0;
 
   ctx.font = "30pt Arial";
   function dst(x,y,x2,y2)
@@ -170,9 +208,10 @@ function drawSpinner(canvas, images)
     ctx.translate(W/2, 15);
     ctx.fillText(""+spincounter, -(""+spincounter).length*30/2, 30/2);
     rotateDeg += speed;
-    if(speed > 0) { speed=Math.max(0, speed-0.05);
+    speed *= cur_spinner.slow_coeff1;
+    if(speed > 0) { speed=Math.max(0, speed-cur_spinner.slow_coeff2);
       if(rotateDeg > 360) { while(rotateDeg > 360) { rotateDeg-=360; spincounter++; } vib(); } }
-    if(speed < 0) { speed=Math.min(0, speed+0.05)
+    if(speed < 0) { speed=Math.min(0, speed+cur_spinner.slow_coeff2)
       if(rotateDeg < -360) { while(rotateDeg < -360) { rotateDeg+=360; spincounter++; } vib(); } }
     rotAngle = rotateDeg*Math.PI/180;
     function vib() { if(use_vibro && "vibrate" in navigator) navigator.vibrate(6); }
@@ -197,7 +236,7 @@ function loadPics(base, pics, callback)
     img.src = base+name;
     function addNewImage()
       {
-      imgbase[name.slice(0, name.lastIndexOf('.'))] = img;
+      imgbase[name.slice(0, name.indexOf('.'))] = img;
       countDownCallback();
       }
     img.onload = addNewImage;
@@ -214,8 +253,8 @@ function loadGame()
   var canvas = createCanvas();
   document.body.appendChild(canvas);
   loadPics('pics/',
-    ['spinner.png',
-     'button.png',
+    ['spinner.0.png',
+     'button.0.png',
      'speaker_on.png',
      'speaker_off.png',
      'vibro_on.png',
