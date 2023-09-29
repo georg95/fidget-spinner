@@ -155,8 +155,8 @@ function drawSpinner(canvas, images)
     ctx.rotate(rotAngle);
     ctx.drawImage(images['spinner'], 0, 0, 530, 530, -W/2, -H/2, W, H);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle='#999';
-    ctx.strokeStyle = "#999";
+    ctx.fillStyle='#777';
+    ctx.strokeStyle = "#777";
     ctx.translate(W/2, 15);
     ctx.fillText(""+spincounter, -(""+spincounter).length*30/2, 30/2);
     rotateDeg += speed;
