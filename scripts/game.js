@@ -55,6 +55,11 @@ var spinnerStats =
     slow_coeff1: 0.998,
     slow_coeff2: 0.02,
     parts: 3,
+    },
+    {
+    slow_coeff1: 0.999,
+    slow_coeff2: 0.01,
+    parts: 3,
     }
   ];
 var spinner_use = parseInt(localStorage.getItem('use_spinner') || '0');
