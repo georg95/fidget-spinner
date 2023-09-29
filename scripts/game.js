@@ -210,7 +210,24 @@ function drawSpinner(canvas, images)
       { y = e.touches[0].pageY; }
     return y;
     }
-
+  var show_crit = false;
+  var anim_step = 0;
+  var anim_frames = 10;
+  function critAnimation()
+    {
+    show_crit = true;
+    anim_step = 0;
+    }
+  function addExtra()
+    {
+    spincounter+=1000;
+    critAnimation();
+    }
+  function incSpins()
+    {
+    spincounter++;
+    if(spinner_use === 3 && ((Math.random()*1000)|0) === 0) { addExtra(); }
+    }
 
   var scale = 1;
   function redraw()
@@ -233,12 +250,27 @@ function drawSpinner(canvas, images)
     ctx.strokeStyle = "#777";
     ctx.translate(W/2, 15);
     ctx.fillText(""+spincounter, -(""+spincounter).length*30/2, 30/2);
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.translate(W/2, H/2);
+    if(show_crit)
+      {
+      anim_step++;
+      var scale = Math.sin((anim_frames-anim_step)/anim_frames+Math.PI/2);
+      var sizex = scale*W*5/6;
+      var sizey = sizex/6;
+      ctx.globalAlpha = (anim_frames-anim_step)/anim_frames;
+      ctx.drawImage(images['crit'], 0, 0, 467, 78, -sizex/2, -sizey/2-H*3/7, sizex, sizey);
+      ctx.globalAlpha = 1;
+      if(anim_step === anim_frames) { show_crit = false; }
+      }
+
     rotateDeg += speed;
     speed *= cur_spinner.slow_coeff1;
     if(speed > 0) { speed=Math.max(0, speed-cur_spinner.slow_coeff2);
-      if(rotateDeg > 360) { while(rotateDeg > 360) { rotateDeg-=360; spincounter++; } vib(); } }
+      if(rotateDeg > 360) { while(rotateDeg > 360) { rotateDeg-=360; incSpins(); } vib(); } }
     if(speed < 0) { speed=Math.min(0, speed+cur_spinner.slow_coeff2)
-      if(rotateDeg < -360) { while(rotateDeg < -360) { rotateDeg+=360; spincounter++; } vib(); } }
+      if(rotateDeg < -360) { while(rotateDeg < -360) { rotateDeg+=360; incSpins(); } vib(); } }
     rotAngle = rotateDeg*Math.PI/180;
     function vib() { if(use_vibro && "vibrate" in navigator) navigator.vibrate(6); }
     requestAnimationFrame(redraw);
@@ -281,6 +313,7 @@ function loadGame()
   loadPics('pics/',
     ['spinner.'+spinner_use+'.png',
      'button.'+spinner_use+'.png',
+     'crit.png',
      'speaker_on.png',
      'speaker_off.png',
      'vibro_on.png',
