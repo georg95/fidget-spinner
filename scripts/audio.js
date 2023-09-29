@@ -1,4 +1,4 @@
-var use_sound = true;
+var use_sound = JSON.parse(localStorage.getItem('use_sound') || true);
 
 document.addEventListener('DOMContentLoaded', initSound);
 
@@ -17,6 +17,7 @@ function initSound()
     use_sound = !use_sound
     if(use_sound) { gainNode.gain.value = 1; }
     else          { gainNode.gain.value = 0; }
+    localStorage.setItem('use_sound', use_sound);
     }
 
   function enableSoundOnSafari()

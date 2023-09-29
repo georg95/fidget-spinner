@@ -5,6 +5,7 @@ var use_vibro = true;
 var cur_spinners = JSON.parse(localStorage.getItem('spinners') || '{}');
 if(!cur_spinners[0])
 localStorage.setItem('spinners', JSON.stringify({0:true})); // 0th spinner by default
+use_vibro = JSON.parse(localStorage.getItem('use_vibro') || true);
 })();
 
 
@@ -117,7 +118,7 @@ function drawSpinner(canvas, images)
   function checkVibro(x,y)
     {
     if (x > W*6/7 && x < W && y > 0 && y < H/7)
-      { use_vibro = !use_vibro; }
+      { use_vibro = !use_vibro; localStorage.setItem('use_vibro', use_vibro); }
     }
   function checkAudio(x,y)
     {
@@ -177,6 +178,7 @@ function drawSpinner(canvas, images)
   canvas.addEventListener("touchcancel", leaveFingers, false);
   canvas.addEventListener("touchmove", flipSpinner, false);
   window.addEventListener('unload', saveProgress, false);
+  window.addEventListener('touchstart', saveProgress, false); // more safe
   loadProgress();
   function loadProgress()
     {
