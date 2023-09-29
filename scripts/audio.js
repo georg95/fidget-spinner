@@ -10,19 +10,23 @@ function initSound()
   var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   console.log('audio:', audioCtx);
   var gainNode = audioCtx.createGain();
+  function setVolume()
+    {
+    if(use_sound) { gainNode.gain.value = 1; }
+    else          { gainNode.gain.value = 0; }
+    }
+  setVolume();
   var source;
   var sounds = [];
   switchSound = function()
     {
     use_sound = !use_sound
-    if(use_sound) { gainNode.gain.value = 1; }
-    else          { gainNode.gain.value = 0; }
+    setVolume();
     localStorage.setItem('use_sound', use_sound);
     }
 
   function enableSoundOnSafari()
     {
-    if(safari_sound_enabled) { return; }
     var buffer = audioCtx.createBuffer(1, 1, 22050);
   	var source = audioCtx.createBufferSource();
   	source.buffer = buffer;
@@ -33,6 +37,7 @@ function initSound()
 
   function enableSound()
     {
+    if(safari_sound_enabled) { return; }
     enableSoundOnSafari();
     playSound(sounds[0]);
     }
